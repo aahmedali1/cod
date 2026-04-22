@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>بوابة واتساب</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.box {
+    background: rgba(255,255,255,0.05);
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 0 20px #00ffcc;
+    width: 300px;
+}
+
+input, button {
+    width: 90%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: none;
+    text-align: center;
+}
+
+button {
+    background: #00ffcc;
+    cursor: pointer;
+}
+
+#msg { margin-top:10px; color:red; }
+#time { color:#00ffcc; margin-top:10px; }
+</style>
+
+</head>
+
+<body>
+
+<div class="box" id="app"></div>
+
+<script>
+
+const codeMain = "157538524569";
+const codeConfirm = "729512";
+
+function showLogin() {
+    document.getElementById("app").innerHTML = `
+        <h3>ادخل الكود</h3>
+        <input id="code" placeholder="الكود">
+        <button onclick="step2()">موافق</button>
+        <div id="msg"></div>
+    `;
+}
+
+function step2() {
+    let val = document.getElementById("code").value;
+
+    if (val === codeMain) {
+        document.getElementById("app").innerHTML = `
+            <h3>حدد عدد الأيام</h3>
+            <input id="days" placeholder="عدد الأيام">
+            <button onclick="step3()">التالي</button>
+            <div id="msg"></div>
+        `;
+    } else {
+        document.getElementById("msg").innerText = "❌ كود غلط";
+    }
+}
+
+function step3() {
+    let days = document.getElementById("days").value;
+
+    if (!days || days <= 0) {
+        document.getElementById("msg").innerText = "❌ اكتب عدد صحيح";
+        return;
+    }
+
+    document.getElementById("app").innerHTML = `
+        <h3>كود التأكيد</h3>
+        <input id="confirm" placeholder="كود التأكيد">
+        <button onclick="finish(${days})">تفعيل</button>
+        <div id="msg"></div>
+    `;
+}
+
+function finish(days) {
+    let confirm = document.getElementById("confirm").value;
+
+    if (confirm === codeConfirm) {
+        let expire = new Date().getTime() + (days * 24 * 60 * 60 * 1000);
+        localStorage.setItem("expire", expire);
+        showPanel();
+    } else {
+        document.getElementById("msg").innerText = "❌ كود التأكيد غلط";
+    }
+}
+
+function showPanel() {
+    let expire = localStorage.getItem("expire");
+    let now = new Date().getTime();
+    let diff = expire - now;
+
+    if (diff <= 0) {
+        localStorage.removeItem("expire");
+        showLogin();
+        return;
+    }
+
+    let hours = Math.floor(diff / (1000 * 60 * 60));
+
+    document.getElementById("app").innerHTML = `
+        <h3>تم التفعيل ✅</h3>
+        <div id="time">الوقت المتبقي: ${hours} ساعة</div>
+        <button onclick="go()">الدخول لواتساب</button>
+        <button onclick="removeTime()">إزالة المدة</button>
+    `;
+}
+
+function go() {
+    window.location.href = "https://web.whatsapp.com/";
+}
+
+function removeTime() {
+    localStorage.removeItem("expire");
+    showLogin();
+}
+
+// عند فتح الموقع
+(function() {
+    let expire = localStorage.getItem("expire");
+
+    if (expire) {
+        showPanel();
+    } else {
+        showLogin();
+    }
+})();
+
+</script>
+
+</body>
+</html>
